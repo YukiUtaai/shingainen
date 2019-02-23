@@ -1,0 +1,121 @@
+def calc_d1(d, c, v, d_dash, c_dash, v_dash):
+    d_dash.append(1)
+    c_dash.append(c)
+    v_dash.append(v)
+    return d_dash, c_dash, v_dash
+
+def calc_d2(d, c, v, c_dc):
+    for j in range(0, d - 1):
+        for k in range(j + 1, d):
+            c_dc[v[j]][v[k]] += c
+    return c_dc
+
+def calc_d3_minus(w, d, c, v, d_dash, c_dash, v_dash):
+    for j in range(len(v)):
+        d_dash.append(2)
+        c_dash.append(c)
+        v_dash.append([v[j], w])
+    d_dash.append(1)
+    c_dash.append(c * (-len(v) + 1))
+    v_dash.append([w])
+    w += 1
+    return w, d_dash, c_dash, v_dash
+
+def calc_d3_plus_even(w, d, c, v, d_dash, c_dash, v_dash):
+    for i2 in range(1, int((d - 1) / 2) + 1):
+        for j2 in range(d):
+            d_dash.append(2)
+            c_dash.append(-2 * c)
+            v_dash.append([v[j2], w])
+
+        d_dash.append(1)
+        c_dash.append(c * (4 * i2 - 1))
+        v_dash.append([w])
+        w += 1
+    return w, d_dash, c_dash, v_dash
+
+def calc_d3_plus_odd(w, d, c, v, d_dash, c_dash, v_dash):
+    for i2 in range(1, int((d - 1) / 2)):
+        for j2 in range(d):
+            d_dash.append(2)
+            c_dash.append(-2 * c)
+            v_dash.append([v[j2], w])
+
+        d_dash.append(1)
+        c_dash.append(c * (4 * i2 - 1))
+        v_dash.append([w])
+        w += 1
+
+    for j2 in range(d):
+        d_dash.append(2)
+        c_dash.append(-c)
+        v_dash.append([v[j2], w])
+
+    d_dash.append(1)
+    c_dash.append(c * (2 * int((d - 1) / 2) - 1))
+    v_dash.append([w])
+    w += 1
+    return w, d_dash, c_dash, v_dash
+
+def main():
+    n, k = [int(i) for i in input().split()]
+    d = [0 for i in range(k)]
+    c = [0 for i in range(k)]
+    v = [[] for i in range(k)]
+    for i in range(k):
+        d[i], c[i], *v[i] = [int(i) for i in input().split()]
+
+    l = 0
+    w = n + 1
+    d_dash = []
+    c_dash = []
+    v_dash = []
+    zero_add = 0
+
+    c_dc = [[0 for i in range(n + 1)] for j in range(n + 1)]
+
+    for i in range(k):
+        if d[i] == 1:
+            d_dash, c_dash, v_dash = calc_d1(d[i], c[i], v[i], d_dash, c_dash, v_dash)
+
+        elif d[i] == 2:
+            c_dc = calc_d2(d[i], c[i], v[i], c_dc)
+
+        elif d[i] >= 3 and c[i] < 0:
+            w, d_dash, c_dash, v_dash = calc_d3_minus(w, d[i], c[i], v[i], d_dash, c_dash, v_dash)
+
+        elif d[i] >= 3 and c[i] > 0:
+            if d[i] % 2 == 0:
+                w, d_dash, c_dash, v_dash = calc_d3_plus_even(w, d[i], c[i], v[i], d_dash, c_dash, v_dash)
+                c_dc = calc_d2(d[i], c[i], v[i], c_dc)
+
+            else:
+                w, d_dash, c_dash, v_dash = calc_d3_plus_odd(w, d[i], c[i], v[i], d_dash, c_dash, v_dash)
+                c_dc = calc_d2(d[i], c[i], v[i], c_dc)
+
+        else:
+            zero_add += c[i]
+
+    if zero_add != 0:
+        d_dash.append(0)
+        c_dash.append(zero_add)
+        v_dash.append("Null")
+
+    for i in range(n + 1):
+        for j in range(n + 1):
+            if c_dc[i][j] != 0:
+                d_dash.append(2)
+                c_dash.append(c_dc[i][j])
+                v_dash.append([i, j])
+
+    l = len(d_dash)
+    print(w - 1, l)
+    for i in range(l):
+        if d_dash[i] > 1:
+            print(d_dash[i], c_dash[i], " ".join(map(str, v_dash[i])))
+        elif d_dash[i] == 1:
+            print(d_dash[i], c_dash[i], v_dash[i][0])
+        else:
+            print(d_dash[i], c_dash[i])
+
+main()
